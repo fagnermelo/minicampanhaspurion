@@ -1,15 +1,5 @@
-const schedule = (window.PURION_SCHEDULE_PARTS || []).flat();
-const assets = [
-  ['Artigo / Tema','Title'],
-  ['Hook','Hook principal'],
-  ['Reel','Reel Idea'],
-  ['Carrossel','Carrossel Idea'],
-  ['Post foto + legenda','Post'],
-  ['GBP','GBP Post'],
-  ['LinkedIn','LinkedIn Post'],
-  ['Stories','Stories'],
-  ['CTA','CTA ideal']
-];
+const schedule = window.purionSchedule || [];
+const assets = [["Artigo / Tema", "Title"], ["Hook", "Hook principal"], ["Reel", "Reel Idea"], ["Carrossel", "Carrossel Idea"], ["Post foto + legenda", "Post"], ["GBP", "GBP Post"], ["LinkedIn", "LinkedIn Post"], ["Stories", "Stories"], ["CTA", "CTA ideal"], ["Envato", "Envato Suggestion"], ["Lead Magnet", "Conteúdo Complementar / Lead Magnet"]];
 let currentIndex = 0;
 let currentAsset = assets[0];
 function parseLocalDate(s){ const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); }
@@ -112,12 +102,16 @@ GBP: ${safe(x['GBP Post'])}
 
 LinkedIn: ${safe(x['LinkedIn Post'])}
 
-Stories: ${safe(x['Stories'])}`;
+Stories: ${safe(x['Stories'])}
+
+Envato: ${safe(x['Envato Suggestion'])}
+
+Lead Magnet: ${safe(x['Conteúdo Complementar / Lead Magnet'])}`;
   navigator.clipboard.writeText(text);
 }
 function markDone(){ const x=schedule[currentIndex]; localStorage.setItem('purion_done_'+x.date,'1'); renderAll(); }
 function exportCSV(){
-  const cols=['date','weekday','week','Cluster','Title','Hook principal','CTA ideal','Reel Idea','Carrossel Idea','Post','GBP Post','LinkedIn Post','Stories'];
+  const cols=['date','weekday','week','Cluster','Title','Hook principal','CTA ideal','Reel Idea','Carrossel Idea','Post','GBP Post','LinkedIn Post','Stories','Envato Suggestion','Conteúdo Complementar / Lead Magnet'];
   const esc=v=>'"'+String(v??'').replaceAll('"','""')+'"';
   const csv=[cols.join(',')].concat(schedule.map(r=>cols.map(c=>esc(r[c])).join(','))).join('\n');
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}); const a=document.createElement('a');
