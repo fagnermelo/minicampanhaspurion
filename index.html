@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Purion — Cronograma Diário de Marketing</title>
+<style>
+  :root {
+    --bg:#f6f3ee; --ink:#111; --muted:#6f6a63; --card:#fffdfa; --line:#ded7ce;
+    --dark:#111; --soft:#ebe5dc; --accent:#b99a5b; --accent2:#1d1d1d;
+    --green:#0e7a4f; --red:#a43d32; --blue:#345b7f;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Inter","Helvetica Neue",Arial,sans-serif;}
+  header{padding:28px 28px 18px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#fffdfa,#f6f3ee);position:sticky;top:0;z-index:20}
+  .top{display:flex;gap:18px;align-items:flex-start;justify-content:space-between;max-width:1440px;margin:0 auto}
+  h1{font-size:clamp(28px,4vw,56px);line-height:.92;margin:0;letter-spacing:-.05em;font-weight:800}
+  .sub{max-width:760px;color:var(--muted);font-size:15px;line-height:1.5;margin-top:12px}
+  .badge{border:1px solid var(--line);border-radius:999px;padding:8px 12px;font-size:12px;background:#fff;white-space:nowrap;color:#403d38}
+  main{max-width:1440px;margin:0 auto;padding:22px 28px 60px}
+  .dashboard{display:grid;grid-template-columns:1.05fr .95fr;gap:18px;margin-top:8px}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:28px;padding:20px;box-shadow:0 12px 35px rgba(20,20,20,.04)}
+  .daily{background:#111;color:white;border-color:#111;position:relative;overflow:hidden}
+  .daily:after{content:"";position:absolute;right:-120px;top:-180px;width:360px;height:360px;border-radius:50%;background:radial-gradient(circle,rgba(185,154,91,.35),transparent 65%);}
+  .label{font-size:12px;text-transform:uppercase;letter-spacing:.16em;color:var(--muted);font-weight:700;margin-bottom:10px}
+  .daily .label{color:#cfc7b9}
+  .dateLine{display:flex;align-items:center;justify-content:space-between;gap:12px;position:relative;z-index:2}
+  .dateTitle{font-size:22px;font-weight:750;letter-spacing:-.02em}
+  .controls{display:flex;gap:8px;flex-wrap:wrap}
+  button,select,input{border:1px solid var(--line);background:#fff;color:#111;border-radius:14px;padding:10px 12px;font-size:13px;cursor:pointer}
+  button:hover{background:#f1ece3}
+  .daily button{background:#1e1e1e;color:#fff;border-color:#3a3a3a}
+  .daily button:hover{background:#2a2a2a}
+  .contentTitle{font-size:clamp(28px,4vw,58px);line-height:.97;letter-spacing:-.045em;margin:28px 0 16px;max-width:980px;position:relative;z-index:2}
+  .meta{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 18px;position:relative;z-index:2}
+  .pill{border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:7px 10px;font-size:12px;background:rgba(255,255,255,.08);color:#f5efe5}
+  .pill.light{border-color:var(--line);background:#fff;color:#2a2723}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;position:relative;z-index:2}
+  .infoBox{border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);border-radius:18px;padding:14px;min-height:108px}
+  .infoBox strong{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:#cfc7b9;margin-bottom:8px}
+  .infoBox p{margin:0;color:#f3f0eb;line-height:1.45;font-size:14px}
+  .whiteBox{border:1px solid var(--line);background:#fff;border-radius:18px;padding:14px}
+  .whiteBox strong{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:#776d62;margin-bottom:8px}
+  .whiteBox p{margin:0;color:#1d1b18;line-height:1.45;font-size:14px}
+  .schedule{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:14px}
+  .dayCard{border:1px solid var(--line);background:#fff;border-radius:18px;padding:12px;min-height:145px;cursor:pointer;transition:.2s}
+  .dayCard:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(0,0,0,.06)}
+  .dayCard.active{background:#111;color:white;border-color:#111}
+  .dayCard .dow{font-size:12px;color:var(--muted);font-weight:700;margin-bottom:6px}
+  .dayCard.active .dow{color:#d8cdbb}
+  .dayCard .t{font-size:13px;font-weight:700;line-height:1.25}
+  .dayCard .c{font-size:11px;margin-top:8px;color:#786f65}
+  .dayCard.active .c{color:#d9d1c4}
+  .weekNav{display:flex;align-items:center;justify-content:space-between;margin-top:20px}
+  .sectionTitle{font-size:24px;letter-spacing:-.03em;margin:0 0 8px}
+  .workflow{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px}
+  .step{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px}
+  .stepNum{font-size:11px;color:var(--accent);font-weight:800;letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px}
+  .step h3{font-size:15px;margin:0 0 6px}
+  .step p{font-size:13px;color:var(--muted);line-height:1.45;margin:0}
+  .assetTabs{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+  .assetTabs button.active{background:#111;color:#fff;border-color:#111}
+  .assetBox{background:#fff;border:1px solid var(--line);border-radius:20px;padding:16px;min-height:180px;line-height:1.55;white-space:pre-wrap}
+  .filters{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+  .small{font-size:12px;color:var(--muted);line-height:1.45}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:18px 0}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px}
+  .kpi b{font-size:28px;letter-spacing:-.04em}
+  .kpi span{display:block;color:var(--muted);font-size:12px;margin-top:3px}
+  .list{display:grid;gap:8px;max-height:430px;overflow:auto;padding-right:6px}
+  .listItem{display:grid;grid-template-columns:80px 1fr 100px;gap:10px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:16px;padding:10px;cursor:pointer}
+  .listItem:hover{background:#f8f4ee}
+  .listItem b{font-size:13px;line-height:1.25}
+  .tag{font-size:11px;border-radius:999px;background:#f0ebe3;padding:5px 7px;color:#4e473f;text-align:center}
+  .copyRow{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .copyRow button{font-size:12px;padding:8px 10px}
+  .empty{padding:28px;border:1px dashed var(--line);border-radius:22px;color:var(--muted);background:#fff}
+  @media(max-width:980px){.dashboard{grid-template-columns:1fr}.grid2,.workflow,.kpis{grid-template-columns:1fr 1fr}.schedule{grid-template-columns:1fr}}
+  @media(max-width:620px){header,main{padding-left:16px;padding-right:16px}.grid2,.workflow,.kpis{grid-template-columns:1fr}.contentTitle{font-size:32px}.top{display:block}.badge{display:inline-block;margin-top:12px}.listItem{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div class="top">
+    <div>
+      <h1>Cronograma Diário<br/>de Marketing Purion</h1>
+      <p class="sub">Painel para transformar o backlog de 50 artigos em execução diária: artigo, Reel, carrossel, post foto+legenda, GBP, LinkedIn e Stories. A lógica segue a rotina operacional da Purion: aquisição por Instagram + Google, conversão por landing page + WhatsApp e autoridade por conteúdo + prova social.</p>
+    </div>
+    <div class="badge">10 semanas · 50 conteúdos · execução diária</div>
+  </div>
+</header>
+<main>
+  <div class="kpis">
+    <div class="kpi"><b id="kpiTotal">50</b><span>conteúdos planeados</span></div>
+    <div class="kpi"><b id="kpiWeek">1</b><span>semana selecionada</span></div>
+    <div class="kpi"><b id="kpiCluster">—</b><span>cluster do dia</span></div>
+    <div class="kpi"><b>5x</b><span>ritmo semanal de artigos</span></div>
+  </div>
+  <section class="dashboard">
+    <article class="panel daily">
+      <div class="dateLine">
+        <div>
+          <div class="label">Conteúdo do dia</div>
+          <div class="dateTitle" id="dateTitle">—</div>
+        </div>
+        <div class="controls">
+          <button onclick="moveDay(-1)">← dia</button>
+          <button onclick="goToday()">hoje</button>
+          <button onclick="moveDay(1)">dia →</button>
+        </div>
+      </div>
+      <h2 class="contentTitle" id="dailyTitle">—</h2>
+      <div class="meta" id="meta"></div>
+      <div class="grid2">
+        <div class="infoBox"><strong>Dor principal</strong><p id="pain">—</p></div>
+        <div class="infoBox"><strong>Percepção construída</strong><p id="perception">—</p></div>
+        <div class="infoBox"><strong>CTA ideal</strong><p id="cta">—</p></div>
+        <div class="infoBox"><strong>Objetivo do dia</strong><p id="dayObjective">—</p></div>
+      </div>
+      <div class="copyRow">
+        <button onclick="copyDailyBrief()">Copiar briefing do dia</button>
+        <button onclick="markDone()">Marcar como feito neste navegador</button>
+      </div>
+    </article>
+    <aside class="panel">
+      <div class="dateLine">
+        <div>
+          <div class="label">Semana editorial</div>
+          <h2 class="sectionTitle" id="weekTitle">Semana 1</h2>
+          <p class="small">Clique num dia para ver o conteúdo, os formatos derivados e a distribuição.</p>
+        </div>
+        <div class="controls">
+          <button onclick="moveWeek(-1)">← semana</button>
+          <button onclick="moveWeek(1)">semana →</button>
+        </div>
+      </div>
+      <div class="schedule" id="weekGrid"></div>
+      <div class="weekNav small" id="weekHint"></div>
+    </aside>
+  </section>
+
+  <section class="dashboard" style="margin-top:18px">
+    <article class="panel">
+      <div class="label">Execução da mini campanha</div>
+      <h2 class="sectionTitle">O que produzir hoje</h2>
+      <div class="assetTabs" id="assetTabs"></div>
+      <div class="assetBox" id="assetBox">Selecione um conteúdo do dia.</div>
+      <div class="copyRow">
+        <button onclick="copyAsset()">Copiar bloco selecionado</button>
+        <button onclick="exportCSV()">Exportar cronograma CSV</button>
+      </div>
+    </article>
+    <aside class="panel">
+      <div class="label">Rotina diária da equipa</div>
+      <h2 class="sectionTitle">Checklist operacional</h2>
+      <div class="workflow">
+        <div class="step"><div class="stepNum">01 · Manhã</div><h3>Publicar / programar</h3><p>Ativar o conteúdo principal do dia e preparar distribuição nos canais.</p></div>
+        <div class="step"><div class="stepNum">02 · Meio-dia</div><h3>Distribuir</h3><p>Adaptar para GBP, LinkedIn, Stories e WhatsApp comercial quando fizer sentido.</p></div>
+        <div class="step"><div class="stepNum">03 · Tarde</div><h3>Responder leads</h3><p>Responder rápido, qualificar o pedido e conduzir para orçamento ou reunião.</p></div>
+        <div class="step"><div class="stepNum">04 · Fim do dia</div><h3>Medir</h3><p>Registar alcance, cliques, mensagens, leads e próximos follow-ups.</p></div>
+      </div>
+      <div style="margin-top:14px" class="whiteBox"><strong>Regra Purion</strong><p>Não vender apenas limpeza. Vender operação: espaço pronto, supervisão próxima, validação final e tranquilidade para o cliente.</p></div>
+    </aside>
+  </section>
+
+  <section class="panel" style="margin-top:18px">
+    <div class="dateLine">
+      <div>
+        <div class="label">Backlog completo</div>
+        <h2 class="sectionTitle">Todos os conteúdos planeados</h2>
+      </div>
+      <div class="filters">
+        <select id="clusterFilter" onchange="renderList()"><option value="">Todos os clusters</option></select>
+        <input id="searchInput" placeholder="Pesquisar título, CTA ou ideia…" oninput="renderList()" />
+      </div>
+    </div>
+    <div class="list" id="contentList"></div>
+  </section>
+</main>
+  <script src="assets/schedule-part-01.js"></script>
+  <script src="assets/schedule-part-02.js"></script>
+  <script src="assets/schedule-part-03.js"></script>
+  <script src="assets/schedule-part-04.js"></script>
+  <script src="assets/schedule-part-05.js"></script>
+  <script src="assets/schedule-part-06.js"></script>
+  <script src="assets/schedule-part-07.js"></script>
+  <script src="assets/schedule-part-08.js"></script>
+  <script src="assets/schedule-part-09.js"></script>
+  <script src="assets/schedule-part-10.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>
