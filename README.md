@@ -4,7 +4,8 @@ Painel diário de marketing para gerir o cronograma editorial da Purion.
 
 ## O que está incluído
 
-- `index.html`: página estática completa do painel, com dados e lógica embutidos.
+- `index.html`: página estática do painel.
+- `assets/`: lógica da interface e cronograma dividido em blocos de dados.
 - Navegação por dia e semana.
 - Blocos prontos para artigo, hook, Reel, carrossel, post foto + legenda, GBP, LinkedIn, Stories, CTA, Envato e Lead Magnet.
 - Filtros por cluster e pesquisa no backlog completo.
