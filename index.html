@@ -181,6 +181,7 @@
 const DATA_FILE = 'data/purion_backlog.xlsx';
 const START_DATE = '2026-05-18';
 const WEEKDAYS = ['Segunda','Terça','Quarta','Quinta','Sexta'];
+const PRIORITY_CLUSTERS = ['Hotelaria', 'Alojamento Local'];
 const DAY_OBJECTIVES = [
   'Publicar artigo forte e ativar Reel principal.',
   'Distribuir conteúdo educativo e captar procura local.',
@@ -220,19 +221,112 @@ function safe(v){return (v===undefined||v===null||v==='')?'—':String(v)}
 function html(v){
   return safe(v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
-function normalizeRows(rows){
-  return rows.map((row, index) => {
+function cleanRows(rows){
+  return rows.map(row => {
     const clean = {};
     Object.entries(row).forEach(([key, value]) => {
       const nextKey = String(key || '').trim();
       if(nextKey) clean[nextKey] = value ?? '';
     });
-    clean.date = dateForIndex(index);
-    clean.weekday = WEEKDAYS[index % 5];
-    clean.week = Math.floor(index / 5) + 1;
-    clean.dayObjective = clean.dayObjective || DAY_OBJECTIVES[index % 5];
     return clean;
   }).filter(row => safe(row.Title) !== '—' || safe(row.Cluster) !== '—');
+}
+function takeFromGroup(groups, cluster){
+  const group = groups.get(cluster);
+  return group && group.length ? group.shift() : null;
+}
+function nextFromClusters(groups, clusters, pointer){
+  for(let tries = 0; tries < clusters.length; tries++){
+    const index = (pointer.value + tries) % clusters.length;
+    const cluster = clusters[index];
+    const item = takeFromGroup(groups, cluster);
+    if(item){
+      pointer.value = (index + 1) % clusters.length;
+      return item;
+    }
+  }
+  return null;
+}
+function nextBalancedSecondary(groups, clusters, weekRows, weekIndex, weeks){
+  const usedThisWeek = new Set(weekRows.map(row => safe(row.Cluster)));
+  const available = clusters.filter(cluster => (groups.get(cluster)?.length || 0) > 0);
+  const candidates = available.some(cluster => !usedThisWeek.has(cluster))
+    ? available.filter(cluster => !usedThisWeek.has(cluster))
+    : available;
+  const weeksLeft = Math.max(1, weeks - weekIndex);
+  const [cluster] = candidates.sort((a, b) => {
+    const pressure = (groups.get(b).length / weeksLeft) - (groups.get(a).length / weeksLeft);
+    return pressure || clusters.indexOf(a) - clusters.indexOf(b);
+  });
+  return cluster ? takeFromGroup(groups, cluster) : null;
+}
+function buildExtraPriorityQueue(groups, weeks){
+  const extra = Object.fromEntries(PRIORITY_CLUSTERS.map(cluster => [
+    cluster,
+    Math.max(0, (groups.get(cluster)?.length || 0) - weeks)
+  ]));
+  const queue = [];
+  while(Object.values(extra).some(count => count > 0)){
+    PRIORITY_CLUSTERS.forEach(cluster => {
+      if(extra[cluster] > 0){
+        queue.push(cluster);
+        extra[cluster]--;
+      }
+    });
+  }
+  return queue;
+}
+function buildWeeklyPlan(rows){
+  const groups = new Map();
+  rows.forEach(row => {
+    const cluster = safe(row.Cluster);
+    if(!groups.has(cluster)) groups.set(cluster, []);
+    groups.get(cluster).push(row);
+  });
+  const weeks = Math.ceil(rows.length / 5);
+  const secondaryClusters = [...groups.keys()].filter(cluster => !PRIORITY_CLUSTERS.includes(cluster));
+  const extraPriorityQueue = buildExtraPriorityQueue(groups, weeks);
+  const planned = [];
+
+  for(let week = 0; week < weeks; week++){
+    const weekRows = [];
+
+    PRIORITY_CLUSTERS.forEach(cluster => {
+      const item = takeFromGroup(groups, cluster);
+      if(item) weekRows.push(item);
+    });
+
+    const extraCluster = extraPriorityQueue[week];
+    if(extraCluster){
+      const item = takeFromGroup(groups, extraCluster);
+      if(item) weekRows.push(item);
+    }
+
+    while(weekRows.length < 5){
+      const item = nextBalancedSecondary(groups, secondaryClusters, weekRows, week, weeks);
+      if(!item) break;
+      weekRows.push(item);
+    }
+
+    while(weekRows.length < 5){
+      const fallback = nextFromClusters(groups, [...groups.keys()], { value: 0 });
+      if(!fallback) break;
+      weekRows.push(fallback);
+    }
+
+    planned.push(...weekRows);
+  }
+
+  return planned;
+}
+function normalizeRows(rows){
+  return buildWeeklyPlan(cleanRows(rows)).map((row, index) => ({
+    ...row,
+    date: dateForIndex(index),
+    weekday: WEEKDAYS[index % 5],
+    week: Math.floor(index / 5) + 1,
+    dayObjective: row.dayObjective || DAY_OBJECTIVES[index % 5]
+  }));
 }
 async function loadSchedule(){
   try {

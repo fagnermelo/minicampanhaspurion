@@ -7,6 +7,7 @@ Painel diário de marketing para gerir o cronograma editorial da Purion.
 - `index.html`: página estática do painel, que lê os dados da planilha.
 - `data/purion_backlog.xlsx`: planilha editável com o backlog do cronograma.
 - Navegação por dia e semana.
+- Planeamento semanal que prioriza Hotelaria e Alojamento Local em todas as semanas, com reforços alternados desses clusters quando houver conteúdos suficientes.
 - Blocos prontos para artigo, hook, Reel, carrossel, post foto + legenda, GBP, LinkedIn, Stories, CTA, Envato e Lead Magnet.
 - Filtros por cluster e pesquisa no backlog completo.
 - Exportação do cronograma em CSV com campos de Envato e Lead Magnet.
