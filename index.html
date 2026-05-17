@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Purion — Cronograma Diário de Marketing</title>
+<style>
+  :root {
+    --bg:#f6f3ee; --ink:#111; --muted:#6f6a63; --card:#fffdfa; --line:#ded7ce;
+    --dark:#111; --soft:#ebe5dc; --accent:#b99a5b; --accent2:#1d1d1d;
+    --green:#0e7a4f; --red:#a43d32; --blue:#345b7f;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Inter","Helvetica Neue",Arial,sans-serif;}
+  header{padding:14px 28px 10px;border-bottom:1px solid var(--line);background:rgba(255,253,250,.94);backdrop-filter:blur(14px);position:sticky;top:0;z-index:20;transition:padding .2s ease,box-shadow .2s ease}
+  .top{display:flex;gap:18px;align-items:center;justify-content:space-between;max-width:1440px;margin:0 auto}
+  h1{font-size:clamp(20px,2vw,30px);line-height:1;margin:0;letter-spacing:-.03em;font-weight:800;transition:font-size .2s ease}
+  h1 br{display:none}
+  .sub{max-width:760px;color:var(--muted);font-size:13px;line-height:1.35;margin:6px 0 0;max-height:38px;overflow:hidden;transition:opacity .2s ease,max-height .2s ease,margin .2s ease}
+  .badge{border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px;background:#fff;white-space:nowrap;color:#403d38;transition:opacity .2s ease,transform .2s ease}
+  body.headerCompact header{padding-top:7px;padding-bottom:7px;box-shadow:0 8px 24px rgba(20,20,20,.06)}
+  body.headerCompact h1{font-size:clamp(18px,1.7vw,24px)}
+  body.headerCompact .sub{max-height:0;opacity:0;margin-top:0}
+  body.headerCompact .badge{opacity:0;transform:translateY(-6px);pointer-events:none}
+  main{max-width:1440px;margin:0 auto;padding:16px 28px 60px}
+  .dashboard{display:grid;grid-template-columns:1.05fr .95fr;gap:18px;margin-top:8px}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:28px;padding:20px;box-shadow:0 12px 35px rgba(20,20,20,.04)}
+  .daily{background:#111;color:white;border-color:#111;position:relative;overflow:hidden}
+  .daily:after{content:"";position:absolute;right:-120px;top:-180px;width:360px;height:360px;border-radius:50%;background:radial-gradient(circle,rgba(185,154,91,.35),transparent 65%);}
+  .label{font-size:12px;text-transform:uppercase;letter-spacing:.16em;color:var(--muted);font-weight:700;margin-bottom:10px}
+  .daily .label{color:#cfc7b9}
+  .dateLine{display:flex;align-items:center;justify-content:space-between;gap:12px;position:relative;z-index:2}
+  .dateTitle{font-size:22px;font-weight:750;letter-spacing:-.02em}
+  .controls{display:flex;gap:8px;flex-wrap:wrap}
+  button,select,input{border:1px solid var(--line);background:#fff;color:#111;border-radius:14px;padding:10px 12px;font-size:13px;cursor:pointer}
+  button:hover{background:#f1ece3}
+  .daily button{background:#1e1e1e;color:#fff;border-color:#3a3a3a}
+  .daily button:hover{background:#2a2a2a}
+  .contentTitle{font-size:clamp(28px,4vw,58px);line-height:.97;letter-spacing:-.045em;margin:28px 0 16px;max-width:980px;position:relative;z-index:2}
+  .meta{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 18px;position:relative;z-index:2}
+  .pill{border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:7px 10px;font-size:12px;background:rgba(255,255,255,.08);color:#f5efe5}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;position:relative;z-index:2}
+  .infoBox{border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);border-radius:18px;padding:14px;min-height:108px}
+  .infoBox strong{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:#cfc7b9;margin-bottom:8px}
+  .infoBox p{margin:0;color:#f3f0eb;line-height:1.45;font-size:14px}
+  .whiteBox{border:1px solid var(--line);background:#fff;border-radius:18px;padding:14px}
+  .whiteBox strong{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:#776d62;margin-bottom:8px}
+  .whiteBox p{margin:0;color:#1d1b18;line-height:1.45;font-size:14px}
+  .schedule{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:14px}
+  .dayCard{border:1px solid var(--line);background:#fff;border-radius:18px;padding:12px;min-height:145px;cursor:pointer;transition:.2s}
+  .dayCard:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(0,0,0,.06)}
+  .dayCard.active{background:#111;color:white;border-color:#111}
+  .dayCard .dow{font-size:12px;color:var(--muted);font-weight:700;margin-bottom:6px}
+  .dayCard.active .dow{color:#d8cdbb}
+  .dayCard .t{font-size:13px;font-weight:700;line-height:1.25}
+  .dayCard .c{font-size:11px;margin-top:8px;color:#786f65}
+  .dayCard.active .c{color:#d9d1c4}
+  .weekNav{display:flex;align-items:center;justify-content:space-between;margin-top:20px}
+  .sectionTitle{font-size:24px;letter-spacing:-.03em;margin:0 0 8px}
+  .workflow{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px}
+  .step{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px}
+  .stepNum{font-size:11px;color:var(--accent);font-weight:800;letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px}
+  .step h3{font-size:15px;margin:0 0 6px}
+  .step p{font-size:13px;color:var(--muted);line-height:1.45;margin:0}
+  .assetTabs{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+  .assetTabs button.active{background:#111;color:#fff;border-color:#111}
+  .assetBox{background:#fff;border:1px solid var(--line);border-radius:20px;padding:16px;min-height:180px;line-height:1.55;white-space:pre-wrap}
+  .filters{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+  .small{font-size:12px;color:var(--muted);line-height:1.45}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:18px 0}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px}
+  .kpi b{font-size:28px;letter-spacing:-.04em}
+  .kpi span{display:block;color:var(--muted);font-size:12px;margin-top:3px}
+  .list{display:grid;gap:8px;max-height:430px;overflow:auto;padding-right:6px}
+  .listItem{display:grid;grid-template-columns:80px 1fr 100px;gap:10px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:16px;padding:10px;cursor:pointer}
+  .listItem:hover{background:#f8f4ee}
+  .listItem b{font-size:13px;line-height:1.25}
+  .tag{font-size:11px;border-radius:999px;background:#f0ebe3;padding:5px 7px;color:#4e473f;text-align:center}
+  .copyRow{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .copyRow button{font-size:12px;padding:8px 10px}
+  .empty{padding:28px;border:1px dashed var(--line);border-radius:22px;color:var(--muted);background:#fff}
+  @media(max-width:980px){.dashboard{grid-template-columns:1fr}.grid2,.workflow,.kpis{grid-template-columns:1fr 1fr}.schedule{grid-template-columns:1fr}}
+  @media(max-width:620px){header,main{padding-left:16px;padding-right:16px}header{padding-top:10px;padding-bottom:8px}.grid2,.workflow,.kpis{grid-template-columns:1fr}.contentTitle{font-size:32px}.top{gap:10px}.sub,.badge{display:none}.listItem{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div class="top">
+    <div>
+      <h1>Cronograma Diário<br/>de Marketing Purion</h1>
+      <p class="sub">Painel para transformar o backlog de artigos em execução diária: artigo, Reel, carrossel, post foto+legenda, GBP, LinkedIn, Stories, Envato e Lead Magnet. Os dados são carregados diretamente da planilha do repositório.</p>
+    </div>
+    <div class="badge">Planilha editável · execução diária</div>
+  </div>
+</header>
+<main>
+  <div class="kpis">
+    <div class="kpi"><b id="kpiTotal">—</b><span>conteúdos planeados</span></div>
+    <div class="kpi"><b id="kpiWeek">—</b><span>semana selecionada</span></div>
+    <div class="kpi"><b id="kpiCluster">—</b><span>cluster do dia</span></div>
+    <div class="kpi"><b>5x</b><span>ritmo semanal de artigos</span></div>
+  </div>
+  <section class="dashboard">
+    <article class="panel daily">
+      <div class="dateLine">
+        <div>
+          <div class="label">Conteúdo do dia</div>
+          <div class="dateTitle" id="dateTitle">A carregar planilha…</div>
+        </div>
+        <div class="controls">
+          <button onclick="moveDay(-1)">← dia</button>
+          <button onclick="goToday()">hoje</button>
+          <button onclick="moveDay(1)">dia →</button>
+        </div>
+      </div>
+      <h2 class="contentTitle" id="dailyTitle">—</h2>
+      <div class="meta" id="meta"></div>
+      <div class="grid2">
+        <div class="infoBox"><strong>Dor principal</strong><p id="pain">—</p></div>
+        <div class="infoBox"><strong>Percepção construída</strong><p id="perception">—</p></div>
+        <div class="infoBox"><strong>CTA ideal</strong><p id="cta">—</p></div>
+        <div class="infoBox"><strong>Objetivo do dia</strong><p id="dayObjective">—</p></div>
+      </div>
+      <div class="copyRow">
+        <button onclick="copyDailyBrief()">Copiar briefing do dia</button>
+        <button onclick="markDone()">Marcar como feito neste navegador</button>
+      </div>
+    </article>
+    <aside class="panel">
+      <div class="dateLine">
+        <div>
+          <div class="label">Semana editorial</div>
+          <h2 class="sectionTitle" id="weekTitle">—</h2>
+          <p class="small">Clique num dia para ver o conteúdo, os formatos derivados e a distribuição.</p>
+        </div>
+        <div class="controls">
+          <button onclick="moveWeek(-1)">← semana</button>
+          <button onclick="moveWeek(1)">semana →</button>
+        </div>
+      </div>
+      <div class="schedule" id="weekGrid"></div>
+      <div class="weekNav small" id="weekHint"></div>
+    </aside>
+  </section>
+
+  <section class="dashboard" style="margin-top:18px">
+    <article class="panel">
+      <div class="label">Execução da mini campanha</div>
+      <h2 class="sectionTitle">O que produzir hoje</h2>
+      <div class="assetTabs" id="assetTabs"></div>
+      <div class="assetBox" id="assetBox">A carregar a planilha do repositório.</div>
+      <div class="copyRow">
+        <button onclick="copyAsset()">Copiar bloco selecionado</button>
+        <button onclick="exportCSV()">Exportar cronograma CSV</button>
+      </div>
+    </article>
+    <aside class="panel">
+      <div class="label">Rotina diária da equipa</div>
+      <h2 class="sectionTitle">Checklist operacional</h2>
+      <div class="workflow">
+        <div class="step"><div class="stepNum">01 · Manhã</div><h3>Publicar / programar</h3><p>Ativar o conteúdo principal do dia e preparar distribuição nos canais.</p></div>
+        <div class="step"><div class="stepNum">02 · Meio-dia</div><h3>Distribuir</h3><p>Adaptar para GBP, LinkedIn, Stories e WhatsApp comercial quando fizer sentido.</p></div>
+        <div class="step"><div class="stepNum">03 · Tarde</div><h3>Responder leads</h3><p>Responder rápido, qualificar o pedido e conduzir para orçamento ou reunião.</p></div>
+        <div class="step"><div class="stepNum">04 · Fim do dia</div><h3>Medir</h3><p>Registar alcance, cliques, mensagens, leads e próximos follow-ups.</p></div>
+      </div>
+      <div style="margin-top:14px" class="whiteBox"><strong>Regra Purion</strong><p>Não vender apenas limpeza. Vender operação: espaço pronto, supervisão próxima, validação final e tranquilidade para o cliente.</p></div>
+    </aside>
+  </section>
+
+  <section class="panel" style="margin-top:18px">
+    <div class="dateLine">
+      <div>
+        <div class="label">Backlog completo</div>
+        <h2 class="sectionTitle">Todos os conteúdos planeados</h2>
+      </div>
+      <div class="filters">
+        <select id="clusterFilter" onchange="renderList()"><option value="">Todos os clusters</option></select>
+        <input id="searchInput" placeholder="Pesquisar título, CTA ou ideia…" oninput="renderList()" />
+      </div>
+    </div>
+    <div class="list" id="contentList"><div class="empty">A carregar dados da planilha.</div></div>
+  </section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+const DATA_FILE = 'data/purion_backlog.xlsx';
+const START_DATE = '2026-05-18';
+const WEEKDAYS = ['Segunda','Terça','Quarta','Quinta','Sexta'];
+const PRIORITY_CLUSTERS = ['Hotelaria', 'Alojamento Local'];
+const DAY_OBJECTIVES = [
+  'Publicar artigo forte e ativar Reel principal.',
+  'Distribuir conteúdo educativo e captar procura local.',
+  'Mostrar bastidores e diferenciação operacional.',
+  'Ativar B2B, LinkedIn e autoridade corporativa.',
+  'Fechar a semana com branding, prova visual e conteúdo premium.'
+];
+const assets = [
+  ['Artigo / Tema', 'Title'],
+  ['Hook', 'Hook principal'],
+  ['Reel', 'Reel Idea'],
+  ['Carrossel', 'Carrossel Idea'],
+  ['Post foto + legenda', 'Post'],
+  ['GBP', 'GBP Post'],
+  ['LinkedIn', 'LinkedIn Post'],
+  ['Stories', 'Stories'],
+  ['CTA', 'CTA ideal'],
+  ['Envato', 'Envato Suggestion'],
+  ['Lead Magnet', 'Conteúdo Complementar / Lead Magnet']
+];
+let schedule = [];
+let currentIndex = 0;
+let currentAsset = assets[0];
+
+function parseLocalDate(s){ const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); }
+function formatIsoDate(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function dateForIndex(index){
+  const d = parseLocalDate(START_DATE);
+  d.setDate(d.getDate() + Math.floor(index / 5) * 7 + (index % 5));
+  return formatIsoDate(d);
+}
+function fmtDate(s){
+  const d=parseLocalDate(s);
+  return d.toLocaleDateString('pt-PT',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+}
+function safe(v){return (v===undefined||v===null||v==='')?'—':String(v)}
+function html(v){
+  return safe(v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function cleanRows(rows){
+  return rows.map(row => {
+    const clean = {};
+    Object.entries(row).forEach(([key, value]) => {
+      const nextKey = String(key || '').trim();
+      if(nextKey) clean[nextKey] = value ?? '';
+    });
+    return clean;
+  }).filter(row => safe(row.Title) !== '—' || safe(row.Cluster) !== '—');
+}
+function takeFromGroup(groups, cluster){
+  const group = groups.get(cluster);
+  return group && group.length ? group.shift() : null;
+}
+function nextFromClusters(groups, clusters, pointer){
+  for(let tries = 0; tries < clusters.length; tries++){
+    const index = (pointer.value + tries) % clusters.length;
+    const cluster = clusters[index];
+    const item = takeFromGroup(groups, cluster);
+    if(item){
+      pointer.value = (index + 1) % clusters.length;
+      return item;
+    }
+  }
+  return null;
+}
+function nextBalancedSecondary(groups, clusters, weekRows, weekIndex, weeks){
+  const usedThisWeek = new Set(weekRows.map(row => safe(row.Cluster)));
+  const available = clusters.filter(cluster => (groups.get(cluster)?.length || 0) > 0);
+  const candidates = available.some(cluster => !usedThisWeek.has(cluster))
+    ? available.filter(cluster => !usedThisWeek.has(cluster))
+    : available;
+  const weeksLeft = Math.max(1, weeks - weekIndex);
+  const [cluster] = candidates.sort((a, b) => {
+    const pressure = (groups.get(b).length / weeksLeft) - (groups.get(a).length / weeksLeft);
+    return pressure || clusters.indexOf(a) - clusters.indexOf(b);
+  });
+  return cluster ? takeFromGroup(groups, cluster) : null;
+}
+function buildExtraPriorityQueue(groups, weeks){
+  const extra = Object.fromEntries(PRIORITY_CLUSTERS.map(cluster => [
+    cluster,
+    Math.max(0, (groups.get(cluster)?.length || 0) - weeks)
+  ]));
+  const queue = [];
+  while(Object.values(extra).some(count => count > 0)){
+    PRIORITY_CLUSTERS.forEach(cluster => {
+      if(extra[cluster] > 0){
+        queue.push(cluster);
+        extra[cluster]--;
+      }
+    });
+  }
+  return queue;
+}
+function buildWeeklyPlan(rows){
+  const groups = new Map();
+  rows.forEach(row => {
+    const cluster = safe(row.Cluster);
+    if(!groups.has(cluster)) groups.set(cluster, []);
+    groups.get(cluster).push(row);
+  });
+  const weeks = Math.ceil(rows.length / 5);
+  const secondaryClusters = [...groups.keys()].filter(cluster => !PRIORITY_CLUSTERS.includes(cluster));
+  const extraPriorityQueue = buildExtraPriorityQueue(groups, weeks);
+  const planned = [];
+
+  for(let week = 0; week < weeks; week++){
+    const weekRows = [];
+
+    PRIORITY_CLUSTERS.forEach(cluster => {
+      const item = takeFromGroup(groups, cluster);
+      if(item) weekRows.push(item);
+    });
+
+    const extraCluster = extraPriorityQueue[week];
+    if(extraCluster){
+      const item = takeFromGroup(groups, extraCluster);
+      if(item) weekRows.push(item);
+    }
+
+    while(weekRows.length < 5){
+      const item = nextBalancedSecondary(groups, secondaryClusters, weekRows, week, weeks);
+      if(!item) break;
+      weekRows.push(item);
+    }
+
+    while(weekRows.length < 5){
+      const fallback = nextFromClusters(groups, [...groups.keys()], { value: 0 });
+      if(!fallback) break;
+      weekRows.push(fallback);
+    }
+
+    planned.push(...weekRows);
+  }
+
+  return planned;
+}
+function normalizeRows(rows){
+  return buildWeeklyPlan(cleanRows(rows)).map((row, index) => ({
+    ...row,
+    date: dateForIndex(index),
+    weekday: WEEKDAYS[index % 5],
+    week: Math.floor(index / 5) + 1,
+    dayObjective: row.dayObjective || DAY_OBJECTIVES[index % 5]
+  }));
+}
+async function loadSchedule(){
+  try {
+    if(!window.XLSX) throw new Error('A biblioteca de leitura XLSX não carregou.');
+    const response = await fetch(`${DATA_FILE}?v=${Date.now()}`, { cache: 'no-store' });
+    if(!response.ok) throw new Error(`Não foi possível abrir ${DATA_FILE}.`);
+    const workbook = XLSX.read(await response.arrayBuffer(), { type: 'array' });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet, { defval: '', raw: false });
+    schedule = normalizeRows(rows);
+    if(!schedule.length) throw new Error('A planilha não tem linhas de conteúdo válidas.');
+    document.getElementById('kpiTotal').textContent = schedule.length;
+    renderFilters();
+    goToday();
+  } catch (error) {
+    renderLoadError(error);
+  }
+}
+function renderLoadError(error){
+  const message = `Não foi possível carregar a planilha ${DATA_FILE}. Publique a página no GitHub Pages ou abra por um servidor local, mantendo a planilha com este nome.`;
+  document.getElementById('dateTitle').textContent = 'Planilha não carregada';
+  document.getElementById('dailyTitle').textContent = 'Verifique o arquivo de dados';
+  document.getElementById('assetBox').textContent = `${message}\n\nDetalhe: ${error.message}`;
+  document.getElementById('contentList').innerHTML = `<div class="empty">${html(message)}</div>`;
+}
+function nearestIndexToToday(){
+  const today = new Date(); today.setHours(0,0,0,0);
+  let best=0, bestDiff=Infinity;
+  schedule.forEach((x,i)=>{const d=parseLocalDate(x.date); const diff=Math.abs(d-today); if(diff<bestDiff){best=i;bestDiff=diff;}});
+  return best;
+}
+function goToday(){ if(!schedule.length) return; currentIndex=nearestIndexToToday(); renderAll(); }
+function moveDay(n){ if(!schedule.length) return; currentIndex=Math.max(0,Math.min(schedule.length-1,currentIndex+n)); renderAll(); }
+function moveWeek(n){
+  if(!schedule.length) return;
+  const wk=schedule[currentIndex].week+n;
+  const found=schedule.findIndex(x=>x.week===wk);
+  if(found>=0){ currentIndex=found; renderAll(); }
+}
+function selectAsset(index){ currentAsset=assets[index] || assets[0]; renderAssets(); }
+function renderDaily(){
+  const x=schedule[currentIndex];
+  if(!x) return;
+  document.getElementById('kpiWeek').textContent=x.week;
+  document.getElementById('kpiCluster').textContent=safe(x.Cluster);
+  document.getElementById('dateTitle').textContent=fmtDate(x.date);
+  document.getElementById('dailyTitle').textContent=safe(x.Title);
+  document.getElementById('pain').textContent=safe(x['Dor principal']);
+  document.getElementById('perception').textContent=safe(x['Percepção construída']);
+  document.getElementById('cta').textContent=safe(x['CTA ideal']);
+  document.getElementById('dayObjective').textContent=safe(x.dayObjective);
+  document.getElementById('meta').innerHTML=`<span class="pill">${html(x.weekday)}</span><span class="pill">Semana ${html(x.week)}</span><span class="pill">${html(x.Cluster)}</span><span class="pill">${html(x['Formato ideal'])}</span>`;
+  renderAssets();
+}
+function renderWeek(){
+  const x=schedule[currentIndex];
+  if(!x) return;
+  const wk=x.week;
+  const days=schedule.filter(i=>i.week===wk);
+  document.getElementById('weekTitle').textContent='Semana '+wk;
+  document.getElementById('weekHint').textContent=`${fmtDate(days[0].date)} — ${fmtDate(days[days.length-1].date)}`;
+  document.getElementById('weekGrid').innerHTML=days.map((d)=>{
+    const i=schedule.indexOf(d);
+    const done=localStorage.getItem('purion_done_'+d.date)==='1';
+    return `<div class="dayCard ${i===currentIndex?'active':''}" onclick="currentIndex=${i};renderAll()">
+      <div class="dow">${html(d.weekday)} · ${html(d.date.slice(5))}</div>
+      <div class="t">${html(d.Title)}</div>
+      <div class="c">${html(d.Cluster)} ${done?' · feito':''}</div>
+    </div>`;
+  }).join('');
+}
+function renderAssets(){
+  document.getElementById('assetTabs').innerHTML=assets.map((a,index)=>`<button class="${a[0]===currentAsset[0]?'active':''}" onclick="selectAsset(${index})">${html(a[0])}</button>`).join('');
+  const x=schedule[currentIndex];
+  if(!x) return;
+  const key=currentAsset[1];
+  let value=safe(x[key]);
+  if(key==='Title') value=`Tema do artigo:
+${safe(x.Title)}
+
+Cluster: ${safe(x.Cluster)}
+Formato ideal: ${safe(x['Formato ideal'])}
+
+Dor principal: ${safe(x['Dor principal'])}
+Percepção construída: ${safe(x['Percepção construída'])}
+CTA: ${safe(x['CTA ideal'])}`;
+  document.getElementById('assetBox').textContent=value;
+}
+function renderFilters(){
+  const clusters=[...new Set(schedule.map(x=>safe(x.Cluster)).filter(x=>x !== '—'))];
+  document.getElementById('clusterFilter').innerHTML='<option value="">Todos os clusters</option>'+clusters.map(c=>`<option value="${html(c)}">${html(c)}</option>`).join('');
+}
+function renderList(){
+  if(!schedule.length) return;
+  const c=document.getElementById('clusterFilter').value;
+  const q=document.getElementById('searchInput').value.toLowerCase();
+  const filtered=schedule.filter(x=>(!c||x.Cluster===c)&&JSON.stringify(x).toLowerCase().includes(q));
+  document.getElementById('contentList').innerHTML=filtered.map(x=>{ const i=schedule.indexOf(x); return `<div class="listItem" onclick="currentIndex=${i};renderAll();window.scrollTo({top:0,behavior:'smooth'})"><span class="tag">Sem. ${html(x.week)}</span><b>${html(x.Title)}</b><span class="tag">${html(x.Cluster)}</span></div>` }).join('') || '<div class="empty">Nenhum conteúdo encontrado.</div>';
+}
+function renderAll(){ renderDaily(); renderWeek(); renderList(); }
+function copyAsset(){ navigator.clipboard.writeText(document.getElementById('assetBox').textContent); }
+function copyDailyBrief(){
+  const x=schedule[currentIndex];
+  if(!x) return;
+  const text=`PURION — BRIEFING DO DIA
+${fmtDate(x.date)}
+
+Tema: ${safe(x.Title)}
+Cluster: ${safe(x.Cluster)}
+
+Dor: ${safe(x['Dor principal'])}
+Percepção: ${safe(x['Percepção construída'])}
+CTA: ${safe(x['CTA ideal'])}
+
+Hook: ${safe(x['Hook principal'])}
+
+Reel: ${safe(x['Reel Idea'])}
+
+Carrossel: ${safe(x['Carrossel Idea'])}
+
+Post foto+legenda: ${safe(x.Post)}
+
+GBP: ${safe(x['GBP Post'])}
+
+LinkedIn: ${safe(x['LinkedIn Post'])}
+
+Stories: ${safe(x.Stories)}
+
+Envato: ${safe(x['Envato Suggestion'])}
+
+Lead Magnet: ${safe(x['Conteúdo Complementar / Lead Magnet'])}`;
+  navigator.clipboard.writeText(text);
+}
+function markDone(){ const x=schedule[currentIndex]; if(!x) return; localStorage.setItem('purion_done_'+x.date,'1'); renderAll(); }
+function exportCSV(){
+  if(!schedule.length) return;
+  const cols=['date','weekday','week','Cluster','Title','Hook principal','CTA ideal','Reel Idea','Carrossel Idea','Post','GBP Post','LinkedIn Post','Stories','Envato Suggestion','Conteúdo Complementar / Lead Magnet'];
+  const esc=v=>'"'+String(v??'').replaceAll('"','""')+'"';
+  const csv=[cols.join(',')].concat(schedule.map(r=>cols.map(c=>esc(r[c])).join(','))).join('\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}); const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download='purion_cronograma_editorial.csv'; a.click(); URL.revokeObjectURL(a.href);
+}
+function updateHeaderCompact(){
+  document.body.classList.toggle('headerCompact', window.scrollY > 36);
+}
+window.addEventListener('scroll', updateHeaderCompact, { passive: true });
+updateHeaderCompact();
+loadSchedule();
+</script>
+</body>
+</html>
